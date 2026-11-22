@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="uk">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Адмінка</title><link rel="stylesheet" href="style.css"></head>
+<body><main class="wrap" style="padding:24px 20px 60px">
+<section id="login" style="max-width:320px"><h2>Вхід</h2>
+  <form id="lf"><label>Пароль<input type="password" name="password" required></label><p class="err" id="le"></p><button class="btn">Увійти</button></form>
+</section>
+<section id="panel" hidden>
+  <h2 id="ft">Додати товар</h2>
+  <form id="pf" class="adm">
+    <label class="full">Назва*<input name="name" required maxlength="120"></label>
+    <label>Ціна, ₴*<input name="price" type="number" min="1" required></label>
+    <label>Матеріал<input name="material" placeholder="PLA, PETG…"></label>
+    <label>Розмір<input name="size" placeholder="10×10×5 см"></label>
+    <label>Фото (jpg, png, webp)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
+    <label class="full">Опис<textarea name="description" rows="3"></textarea></label>
+    <label class="full"><input type="checkbox" name="inStock" checked style="width:auto"> В наявності</label>
+    <p class="err full" id="pe"></p>
+    <div class="full"><button class="btn" id="sb">Зберегти товар</button> <button type="button" class="btn alt" id="cn" hidden>Скасувати</button></div>
+  </form>
+  <h2 style="margin-top:40px">Товари</h2><div id="plist"></div>
+  <h2 style="margin-top:40px">Замовлення</h2><div id="olist"></div>
+</section></main>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let tok=sessionStorage.getItem('t')||'',list=[],editing=null;
+async function api(url,o={}){const r=await fetch(url,{...o,headers:{'Content-Type':'application/json',...o.headers,Authorization:'Bearer '+tok}});const d=await r.json().catch(()=>({}));if(r.status===401&&tok){sessionStorage.removeItem('t');location.reload()}if(!r.ok)throw Error(d.error||'Помилка');return d}
+async function upload(file){
+  const bmp=await createImageBitmap(file),k=Math.min(1,1400/Math.max(bmp.width,bmp.height)),c=document.createElement('canvas');
+  c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bmp,0,0,c.width,c.height);
+  const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));
+  const r=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':'image/jpeg',Authorization:'Bearer '+tok},body:blob});
+  const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Не вдалося завантажити фото');return d}
+async function load(){
+  $('#login').hidden=true;$('#panel').hidden=false;
+  list=await fetch('/api/products').then(r=>r.json());
+  $('#plist').innerHTML=list.map(p=>`<div class="item">${p.image?`<img src="${esc(p.image)}" alt="">`:'<div class="ph" style="width:56px"></div>'}<span><b>${esc(p.name)}</b><br><small class="meta">${p.price} ₴ · ${p.inStock?'в наявності':'немає'}</small></span><button class="btn alt" data-e="${esc(p.id)}">Змінити</button> <button class="btn alt" data-d="${esc(p.id)}">Видалити</button></div>`).join('')||'<p>Товарів ще немає.</p>';
+  const o=await api('/api/orders');
+  $('#olist').innerHTML=o.map(x=>`<div class="item"><span><b>№${esc(x.id)}</b> · ${new Date(x.date).toLocaleString('uk-UA')} · ${x.total} ₴<br>${esc(x.customer.name)}, ${esc(x.customer.phone)}, ${esc(x.customer.city)}, ${esc(x.customer.branch)}<br><small class="meta">${x.lines.map(l=>esc(l.name)+' ×'+l.qty).join('; ')}</small></span></div>`).join('')||'<p>Замовлень ще немає.</p>';
+}
+function reset(){editing=null;$('#pf').reset();$('#ft').textContent='Додати товар';$('#cn').hidden=true}
+$('#cn').onclick=reset;
+$('#lf').onsubmit=async e=>{e.preventDefault();try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:e.target.password.value})});const j=await r.json();if(!r.ok)throw Error(j.error||'Помилка');tok=j.token;sessionStorage.setItem('t',tok);load()}catch(x){$('#le').textContent=x.message}};
+$('#pf').onsubmit=async e=>{e.preventDefault();const f=e.target,b=$('#sb');b.disabled=true;$('#pe').textContent='';
+  try{const body=Object.fromEntries(new FormData(f));delete body.image;body.inStock=f.elements.inStock.checked;
+    if(f.elements.image.files[0]){$('#pe').textContent='Завантажую фото…';body.image=(await upload(f.elements.image.files[0])).url;$('#pe').textContent=''}
+    await api(editing?'/api/products/'+editing:'/api/products',{method:editing?'PUT':'POST',body:JSON.stringify(body)});reset();await load()}
+  catch(x){$('#pe').textContent=x.message}b.disabled=false};
+document.addEventListener('click',async e=>{const t=e.target;
+  if(t.dataset.e){const p=list.find(x=>x.id===t.dataset.e),f=$('#pf');editing=p.id;for(const k of['name','price','material','size','description'])f.elements[k].value=p[k];f.elements.inStock.checked=p.inStock;$('#ft').textContent='Редагувати товар (нове фото — за бажанням)';$('#cn').hidden=false;scrollTo(0,0)}
+  if(t.dataset.d&&confirm('Видалити товар?')){await api('/api/products/'+t.dataset.d,{method:'DELETE'});load()}});
+if(tok)load().catch(()=>{});
+</script></body></html>

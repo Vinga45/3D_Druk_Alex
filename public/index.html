@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Шар — 3D-друк і вироби</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;600&family=Unbounded:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><div class="wrap"><span class="logo">Шар</span><button class="btn alt" id="open">Кошик (<span id="count">0</span>)</button></div></header>
+<section class="hero"><div class="wrap">
+  <div><h1>Речі, надруковані на 3D-принтері</h1><p>Органайзери, декор і корисні дрібниці. Кожен виріб друкується на замовлення шар за шаром.</p></div>
+  <div class="print" role="img" aria-label="Шари друку"></div>
+</div></section>
+<main class="wrap">
+  <div class="tools"><h2>Каталог</h2><input id="q" type="search" placeholder="Пошук товару" aria-label="Пошук"></div>
+  <div class="grid" id="grid"></div>
+</main>
+<footer><div class="wrap">Доставка Новою поштою по Україні.</div></footer>
+<aside id="cart" aria-label="Кошик">
+  <div class="row" style="margin:0"><h2>Кошик</h2><button class="btn alt" id="close">Закрити</button></div>
+  <div id="lines"></div>
+  <p><b>Разом: <span id="total">0 ₴</span></b></p>
+  <form id="order" hidden>
+    <label>Ім’я*<input name="name" required maxlength="100" autocomplete="name"></label>
+    <label>Телефон*<input name="phone" type="tel" required autocomplete="tel"></label>
+    <label>Email<input name="email" type="email" autocomplete="email"></label>
+    <label>Місто*<input name="city" required autocomplete="address-level2"></label>
+    <label>Відділення Нової пошти або адреса*<input name="branch" required></label>
+    <label>Оплата<select name="payment"><option>Накладений платіж</option><option>Переказ на картку</option></select></label>
+    <label>Коментар<textarea name="comment" rows="3"></textarea></label>
+    <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p class="err" id="msg"></p>
+    <button class="btn">Оформити замовлення</button>
+  </form>
+</aside>
+<script src="app.js"></script>
+</body>
+</html>
