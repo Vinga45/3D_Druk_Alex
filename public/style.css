@@ -43,3 +43,36 @@ footer{border-top:1px solid var(--line);padding:24px 0;color:var(--mute)}
 .item span{flex:1}
 @media(max-width:760px){.hero .wrap{grid-template-columns:1fr}.print{max-height:200px;aspect-ratio:3/1}.adm{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* мови, детальна картка товару */
+.hbar{display:flex;gap:10px;align-items:center}
+.lang{display:flex}
+.lang button{border:1px solid var(--ink);background:transparent;padding:8px 10px;cursor:pointer}
+.lang button:first-child{border-radius:6px 0 0 6px;border-right:0}
+.lang button:last-child{border-radius:0 6px 6px 0}
+.lang [aria-pressed=true]{background:var(--ink);color:#fff}
+.thumb{cursor:pointer}
+.lnk{background:none;border:0;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.lnk:hover{color:var(--acc)}
+.more{background:none;border:0;padding:0;text-align:left;color:var(--acc);cursor:pointer;font-size:14px}
+.body p.d{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+dialog{width:min(960px,94vw);max-height:92vh;overflow:auto;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+dialog::backdrop{background:rgba(22,26,36,.6)}
+.x{position:absolute;top:12px;right:12px;z-index:1}
+.pm{display:grid;grid-template-columns:1.2fr 1fr;gap:28px;padding:28px}
+.pm img,.pm .ph{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px}
+.pinfo{padding-top:36px}
+.pinfo h2{font-size:24px;margin-bottom:8px}
+.price{font:600 22px Unbounded,sans-serif;margin:0 0 12px}
+.pinfo dl{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;margin:0 0 16px;color:var(--mute)}
+.pinfo dd{margin:0;color:var(--ink)}
+.desc{white-space:pre-wrap;line-height:1.7;min-height:140px;margin-bottom:20px}
+@media(max-width:760px){.pm{grid-template-columns:1fr;padding:16px}.pinfo{padding-top:0}}
+
+/* замовлення в адмінці */
+.ord{padding:12px 0;border-bottom:1px solid var(--line);display:grid;gap:4px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.btn.sm{padding:6px 12px;font-size:14px}
+.acts [aria-pressed=true]{background:var(--ink);color:#fff}
+.danger{color:var(--err);border-color:var(--err)}
+.danger:hover{background:var(--err);color:#fff;border-color:var(--err)}

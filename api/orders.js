@@ -12,15 +12,15 @@ module.exports = async (req, res) => {
     const prods = await u.getProducts(), lines = [];
     for (const it of Array.isArray(items) ? items.slice(0, 50) : []) {
       const p = prods.find(x => x.id === it.id), qty = Math.min(99, Math.floor(+it.qty));
-      if (p && p.inStock && qty > 0) lines.push({ name: p.name, price: p.price, qty }); // ціна з сервера
+      if (p && p.inStock && qty > 0) lines.push({ name: p.name, price: p.price, qty, owner: p.owner || '' }); // ціна з сервера
     }
     const cu = { name: u.cut(c.name, 100), phone: u.cut(c.phone, 30), email: u.cut(c.email, 100), city: u.cut(c.city, 100), branch: u.cut(c.branch, 150), comment: u.cut(c.comment, 1000) };
     if (!lines.length || !cu.name || !cu.phone || !cu.city || !cu.branch) return res.status(400).json({ error: 'Заповніть усі обов’язкові поля' });
     const total = lines.reduce((s, l) => s + l.price * l.qty, 0);
-    const order = { id: Date.now().toString(36).toUpperCase(), date: new Date().toISOString(), customer: cu, payment: u.cut(payment, 60), lines, total };
+    const order = { id: Date.now().toString(36).toUpperCase(), date: new Date().toISOString(), customer: cu, payment: u.cut(payment, 60), status: '', lines, total };
     await u.redis('LPUSH', 'orders', JSON.stringify(order)); // копія в базі
     await u.redis('LTRIM', 'orders', 0, 499);
-    const e = u.esc, rows = lines.map(l => `<tr><td>${e(l.name)}</td><td>${l.qty}</td><td>${l.price} ₴</td><td>${l.price * l.qty} ₴</td></tr>`).join('');
+    const e = u.esc, rows = lines.map(l => `<tr><td>${e(l.name)}</td><td>${e(l.owner) || '—'}</td><td>${l.qty}</td><td>${l.price} ₴</td><td>${l.price * l.qty} ₴</td></tr>`).join('');
     try {
       const { SMTP_HOST, SMTP_PORT = 465, SMTP_USER, SMTP_PASS, ORDER_EMAIL } = process.env;
       await nodemailer.createTransport({ host: SMTP_HOST, port: +SMTP_PORT, secure: +SMTP_PORT === 465, auth: { user: SMTP_USER, pass: SMTP_PASS } }).sendMail({
@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
 <p><b>Ім’я:</b> ${e(cu.name)}<br><b>Телефон:</b> ${e(cu.phone)}<br><b>Email:</b> ${e(cu.email) || '—'}<br>
 <b>Місто:</b> ${e(cu.city)}<br><b>Відділення / адреса:</b> ${e(cu.branch)}<br><b>Оплата:</b> ${e(order.payment)}<br>
 <b>Коментар:</b> ${e(cu.comment) || '—'}</p>
-<table border="1" cellpadding="6" cellspacing="0"><tr><th>Товар</th><th>К-сть</th><th>Ціна</th><th>Сума</th></tr>${rows}</table>
+<table border="1" cellpadding="6" cellspacing="0"><tr><th>Товар</th><th>Чий</th><th>К-сть</th><th>Ціна</th><th>Сума</th></tr>${rows}</table>
 <h3>Разом: ${total} ₴</h3>`
       });
     } catch (err) { console.error('Лист не надіслано:', err.message); }

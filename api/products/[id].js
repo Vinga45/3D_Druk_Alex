@@ -6,7 +6,8 @@ module.exports = async (req, res) => {
     if (req.method === 'PUT') {
       if (i < 0) return res.status(404).json({ error: 'Не знайдено' });
       const b = req.body || {}, old = list[i];
-      list[i] = { ...old, ...u.clean(b) };
+      const c = u.clean(b); if (!c.owner) c.owner = old.owner || '';
+      list[i] = { ...old, ...c };
       if (u.okImg(b.image)) { list[i].image = b.image; await u.dropImg(old.image); }
       await u.setProducts(list); return res.json(list[i]);
     }
