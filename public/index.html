@@ -8,31 +8,42 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header><div class="wrap"><span class="logo">Шар</span><button class="btn alt" id="open">Кошик (<span id="count">0</span>)</button></div></header>
+<header><div class="wrap"><span class="logo">Шар</span>
+  <div class="hbar">
+    <div class="lang" role="group" aria-label="Language"><button data-lang="uk">UA</button><button data-lang="en">EN</button></div>
+    <button class="btn alt" id="open"><span data-i18n="cart"></span> (<span id="count">0</span>)</button>
+  </div>
+</div></header>
 <section class="hero"><div class="wrap">
-  <div><h1>Речі, надруковані на 3D-принтері</h1><p>Органайзери, декор і корисні дрібниці. Кожен виріб друкується на замовлення шар за шаром.</p></div>
-  <div class="print" role="img" aria-label="Шари друку"></div>
+  <div><h1 data-i18n="h1"></h1><p data-i18n="lead"></p></div>
+  <div class="print" role="img" aria-label="3D print layers"></div>
 </div></section>
 <main class="wrap">
-  <div class="tools"><h2>Каталог</h2><input id="q" type="search" placeholder="Пошук товару" aria-label="Пошук"></div>
+  <div class="tools"><h2 data-i18n="catalog"></h2><input id="q" type="search" data-ph="search"></div>
   <div class="grid" id="grid"></div>
 </main>
-<footer><div class="wrap">Доставка Новою поштою по Україні.</div></footer>
-<aside id="cart" aria-label="Кошик">
-  <div class="row" style="margin:0"><h2>Кошик</h2><button class="btn alt" id="close">Закрити</button></div>
+<footer><div class="wrap" data-i18n="foot"></div></footer>
+
+<dialog id="pm" aria-label="Product">
+  <button class="btn alt x" id="pclose" data-i18n="close"></button>
+  <div id="pbody"></div>
+</dialog>
+
+<aside id="cart">
+  <div class="row" style="margin:0"><h2 data-i18n="cart"></h2><button class="btn alt" id="close" data-i18n="close"></button></div>
   <div id="lines"></div>
-  <p><b>Разом: <span id="total">0 ₴</span></b></p>
+  <p><b><span data-i18n="total"></span>: <span id="total">0 ₴</span></b></p>
   <form id="order" hidden>
-    <label>Ім’я*<input name="name" required maxlength="100" autocomplete="name"></label>
-    <label>Телефон*<input name="phone" type="tel" required autocomplete="tel"></label>
-    <label>Email<input name="email" type="email" autocomplete="email"></label>
-    <label>Місто*<input name="city" required autocomplete="address-level2"></label>
-    <label>Відділення Нової пошти або адреса*<input name="branch" required></label>
-    <label>Оплата<select name="payment"><option>Накладений платіж</option><option>Переказ на картку</option></select></label>
-    <label>Коментар<textarea name="comment" rows="3"></textarea></label>
+    <label><span data-i18n="fName"></span>*<input name="name" required maxlength="100" autocomplete="name"></label>
+    <label><span data-i18n="fPhone"></span>*<input name="phone" type="tel" required autocomplete="tel"></label>
+    <label><span data-i18n="fEmail"></span><input name="email" type="email" autocomplete="email"></label>
+    <label><span data-i18n="fCity"></span>*<input name="city" required autocomplete="address-level2"></label>
+    <label><span data-i18n="fBranch"></span>*<input name="branch" required></label>
+    <label><span data-i18n="fPay"></span><select name="payment"><option value="Накладений платіж" data-i18n="pay1"></option><option value="Переказ на картку" data-i18n="pay2"></option></select></label>
+    <label><span data-i18n="fComment"></span><textarea name="comment" rows="3"></textarea></label>
     <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
     <p class="err" id="msg"></p>
-    <button class="btn">Оформити замовлення</button>
+    <button class="btn" data-i18n="submit"></button>
   </form>
 </aside>
 <script src="app.js"></script>

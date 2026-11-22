@@ -10,6 +10,7 @@
   <form id="pf" class="adm">
     <label class="full">Назва*<input name="name" required maxlength="120"></label>
     <label>Ціна, ₴*<input name="price" type="number" min="1" required></label>
+    <label>Чий це товар*<select name="owner" required><option value="">— оберіть —</option><option>Влад</option><option>Саша</option></select></label>
     <label>Матеріал<input name="material" placeholder="PLA, PETG…"></label>
     <label>Розмір<input name="size" placeholder="10×10×5 см"></label>
     <label>Фото (jpg, png, webp)<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
@@ -23,7 +24,7 @@
 </section></main>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let tok=sessionStorage.getItem('t')||'',list=[],editing=null;
+let tok=sessionStorage.getItem('t')||'',list=[],orders=[],editing=null;
 async function api(url,o={}){const r=await fetch(url,{...o,headers:{'Content-Type':'application/json',...o.headers,Authorization:'Bearer '+tok}});const d=await r.json().catch(()=>({}));if(r.status===401&&tok){sessionStorage.removeItem('t');location.reload()}if(!r.ok)throw Error(d.error||'Помилка');return d}
 async function upload(file){
   const bmp=await createImageBitmap(file),k=Math.min(1,1400/Math.max(bmp.width,bmp.height)),c=document.createElement('canvas');
@@ -35,9 +36,9 @@ async function upload(file){
 async function load(){
   $('#login').hidden=true;$('#panel').hidden=false;
   list=await fetch('/api/products').then(r=>r.json());
-  $('#plist').innerHTML=list.map(p=>`<div class="item">${p.image?`<img src="${esc(p.image)}" alt="">`:'<div class="ph" style="width:56px"></div>'}<span><b>${esc(p.name)}</b><br><small class="meta">${p.price} ₴ · ${p.inStock?'в наявності':'немає'}</small></span><button class="btn alt" data-e="${esc(p.id)}">Змінити</button> <button class="btn alt" data-d="${esc(p.id)}">Видалити</button></div>`).join('')||'<p>Товарів ще немає.</p>';
-  const o=await api('/api/orders');
-  $('#olist').innerHTML=o.map(x=>`<div class="item"><span><b>№${esc(x.id)}</b> · ${new Date(x.date).toLocaleString('uk-UA')} · ${x.total} ₴<br>${esc(x.customer.name)}, ${esc(x.customer.phone)}, ${esc(x.customer.city)}, ${esc(x.customer.branch)}<br><small class="meta">${x.lines.map(l=>esc(l.name)+' ×'+l.qty).join('; ')}</small></span></div>`).join('')||'<p>Замовлень ще немає.</p>';
+  $('#plist').innerHTML=list.map(p=>`<div class="item">${p.image?`<img src="${esc(p.image)}" alt="">`:'<div class="ph" style="width:56px"></div>'}<span><b>${esc(p.name)}</b><br><small class="meta">${p.price} ₴ · ${esc(p.owner||'без власника')} · ${p.inStock?'в наявності':'немає'}</small></span><button class="btn alt" data-e="${esc(p.id)}">Змінити</button> <button class="btn alt" data-d="${esc(p.id)}">Видалити</button></div>`).join('')||'<p>Товарів ще немає.</p>';
+  const o=orders=await api('/api/orders');
+  $('#olist').innerHTML=o.map(x=>`<div class="ord"><div><b>№${esc(x.id)}</b> · ${new Date(x.date).toLocaleString('uk-UA')} · ${x.total} ₴ · <b>${esc(x.status||'Нове')}</b></div><div>${esc(x.customer.name)}, ${esc(x.customer.phone)}, ${esc(x.customer.city)}, ${esc(x.customer.branch)}</div><small class="meta">${x.lines.map(l=>esc(l.name)+' ×'+l.qty+(l.owner?' ('+esc(l.owner)+')':'')).join('; ')}${x.customer.comment?' · '+esc(x.customer.comment):''}</small><div class="acts">${['Взято','Виконую','Готово'].map(s=>`<button class="btn alt sm" data-st="${s}" data-oid="${esc(x.id)}" aria-pressed="${x.status===s}">${s}</button>`).join('')}<button class="btn alt sm danger" data-od="${esc(x.id)}">Видалити</button></div></div>`).join('')||'<p>Замовлень ще немає.</p>';
 }
 function reset(){editing=null;$('#pf').reset();$('#ft').textContent='Додати товар';$('#cn').hidden=true}
 $('#cn').onclick=reset;
@@ -48,7 +49,9 @@ $('#pf').onsubmit=async e=>{e.preventDefault();const f=e.target,b=$('#sb');b.dis
     await api(editing?'/api/products/'+editing:'/api/products',{method:editing?'PUT':'POST',body:JSON.stringify(body)});reset();await load()}
   catch(x){$('#pe').textContent=x.message}b.disabled=false};
 document.addEventListener('click',async e=>{const t=e.target;
-  if(t.dataset.e){const p=list.find(x=>x.id===t.dataset.e),f=$('#pf');editing=p.id;for(const k of['name','price','material','size','description'])f.elements[k].value=p[k];f.elements.inStock.checked=p.inStock;$('#ft').textContent='Редагувати товар (нове фото — за бажанням)';$('#cn').hidden=false;scrollTo(0,0)}
+  if(t.dataset.e){const p=list.find(x=>x.id===t.dataset.e),f=$('#pf');editing=p.id;for(const k of['name','price','owner','material','size','description'])f.elements[k].value=p[k];f.elements.inStock.checked=p.inStock;$('#ft').textContent='Редагувати товар (нове фото — за бажанням)';$('#cn').hidden=false;scrollTo(0,0)}
+  if(t.dataset.st){const o=orders.find(x=>x.id===t.dataset.oid),st=o&&o.status===t.dataset.st?'':t.dataset.st;try{await api('/api/orders/'+t.dataset.oid,{method:'PATCH',body:JSON.stringify({status:st})});load()}catch(x){alert(x.message)}}
+  if(t.dataset.od&&confirm('Видалити замовлення назавжди?')){try{await api('/api/orders/'+t.dataset.od,{method:'DELETE'});load()}catch(x){alert(x.message)}}
   if(t.dataset.d&&confirm('Видалити товар?')){await api('/api/products/'+t.dataset.d,{method:'DELETE'});load()}});
 if(tok)load().catch(()=>{});
 </script></body></html>

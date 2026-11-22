@@ -7,6 +7,7 @@ module.exports = async (req, res) => {
       if (!u.guard(req, res)) return;
       const b = req.body || {}, p = u.clean(b);
       if (!p.name || !p.price) return res.status(400).json({ error: 'Потрібні назва і ціна' });
+      if (!p.owner) return res.status(400).json({ error: 'Оберіть, чий це товар' });
       const list = await u.getProducts();
       const item = { id: crypto.randomUUID(), ...p, image: u.okImg(b.image) ? b.image : '' };
       list.push(item); await u.setProducts(list);
